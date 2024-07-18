@@ -11,16 +11,15 @@ print("Now Listening")
 
 client_socket, client_address = server.accept()
 
+size = client_socket.recv(2048)
+
 file = open('request_image.BMP','wb')
-image_data = client_socket.recv(2048)
+image_data = client_socket.recv(int.from_bytes(size, 'big'))
 
-while image_data:
-    file.write(image_data)
-    image_data = client_socket.recv(2048)
-
+file.write(image_data)
 
 file.close()
-server.close()
+
 
 fingerprint_folder = r'E:\ISRO\VSSC\Fingerprint_analysis\Real_new'
 sample_image_path = r'E:\ISRO\VSSC\Fingerprint_analysis\fingerprint using client server\request_image.BMP'
@@ -78,11 +77,13 @@ if best_image is not None:
     cv2.imshow("Result", result)
     cv2.waitKey(2000)
     cv2.destroyAllWindows()
+    client_socket.send(b'Access Granted')
 
 if filename is None:
     result_none = cv2.resize(sample, None, fx=4, fy=4)
+    client_socket.send(b'Access Denied')
     cv2.imshow("Result",result_none)
     cv2.waitKey(2000)
     cv2.destroyAllWindows()
 
-
+server.close()
