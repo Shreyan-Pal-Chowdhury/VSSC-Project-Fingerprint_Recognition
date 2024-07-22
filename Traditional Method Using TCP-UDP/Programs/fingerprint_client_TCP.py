@@ -9,6 +9,11 @@ file = open(path, 'rb')
 size = os.path.getsize(path)
 
 image_data = file.read(size)
+
+# send the keypoints and descriptor to the server and not the image
+# save the keypoints and descriptors as pickles
+# compress the pickles
+
 client.send(size.to_bytes(4, 'big'))
 
 client.send(image_data)
