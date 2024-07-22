@@ -6,7 +6,14 @@ import os
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(('localhost', 12345))
 print("Server binded")
+
+# put a while loop which terminates on keyboard interrupt
+# inside the body of the while loop put all the processing before sever.close()
+
 server.listen()
+
+# fork a child process for serving multiple clients
+
 print("Now Listening")
 
 client_socket, client_address = server.accept()
@@ -47,6 +54,7 @@ for file in os.listdir(fingerprint_folder):
         print(f"Failed to load fingerprint image: {fingerprint_image_path}")
         continue
 
+    # implement the below line on the client side
     keypoints_2, descriptors_2 = sift.detectAndCompute(fingerprint_image, None)
 
     matcher = cv2.FlannBasedMatcher({'algorithm': 1, 'trees': 10}, {})
