@@ -6,10 +6,21 @@ import bz2
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 path = input("Enter your image: ")
-sample = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+
+try:
+    file = open(path)
+    sample = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+except OSError:
+    print("Unable to read file!")
+    exit()
 
 sift = cv2.SIFT_create()
-keypoints, descriptor = sift.detectAndCompute(sample, None)
+
+try:
+    keypoints, descriptor = sift.detectAndCompute(sample, None)
+except cv2.error:
+    print("Wrong File format!")
+    exit()
 
 keypoints_as_tuples = [(kp.pt, kp.size, kp.angle, kp.response, kp.octave, kp.class_id) for kp in keypoints]
 keypoints_data = pickle.dumps(keypoints_as_tuples)
@@ -40,15 +51,23 @@ file = open(r'E:\ISRO\VSSC\Fingerprint_analysis\fingerprint using client server\
 descriptor_data = file.read(2048)
 
 while descriptor_data:
-    client.sendto(descriptor_data, ('localhost', 12345))
+    try:
+        client.sendto(descriptor_data, ('localhost', 12345))
+    except ConnectionResetError:
+        print("Connection Closed by Server!!")
+        exit()
     descriptor_data = file.read(2048)
 
 file.close()
 
 client.sendto(b'0', ('localhost', 12345))
 
+try:
+    data, add = client.recvfrom(2048)
+except ConnectionAbortedError:
+    print("Connection Closed by Server!!")
+    exit()
 
-data, add = client.recvfrom(2048)
 print(data.decode())
 
 file.close()
