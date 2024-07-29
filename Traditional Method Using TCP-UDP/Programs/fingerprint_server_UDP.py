@@ -7,9 +7,18 @@ import bz2
 import multiprocessing
 
 def image_processing(total_received, total_descriptor, server, add):
+    try:
+        f = bz2.decompress(total_received)
+    except (ValueError, OSError):
+        print("Data is not properly supplied!")
+        exit()
 
-    f = bz2.decompress(total_received)
-    keypoints_decompossed = pickle.loads(f)
+    try:
+        keypoints_decompossed = pickle.loads(f)
+    except EOFError:
+        print("File format not supported!")
+        exit()
+
     keypoints_unpickled = pickle.loads(keypoints_decompossed)
 
     keypoints_1 = [
@@ -22,9 +31,18 @@ def image_processing(total_received, total_descriptor, server, add):
     keypoints_1 = tuple(keypoints_1)
     print(keypoints_1)
 
+    try:
+        fd = bz2.decompress(total_descriptor)
+    except (ValueError, OSError):
+        print("Data is not properly supplied!")
+        exit()
 
-    fd = bz2.decompress(total_descriptor)
-    deccriptor_decompossed = pickle.loads(fd)
+    try:
+        deccriptor_decompossed = pickle.loads(fd)
+    except EOFError:
+        print("File format not supported!")
+        exit()
+
     descriptors_1 = pickle.loads(deccriptor_decompossed)
     print(descriptors_1)
 
