@@ -5,13 +5,24 @@ import os
 import bz2
 import multiprocessing
 
-def image_processing(client_socket):
+def image_processing(client_socket, server):
         # Receiving Keypoints data
         size = client_socket.recv(2048)
         keypoints = client_socket.recv(int.from_bytes(size, 'big'))
 
-        f = bz2.decompress(keypoints)
-        keypoints_decompossed = pickle.loads(f)
+        try:
+            f = bz2.decompress(keypoints)
+        except (ValueError, OSError):
+            print("Data is not properly supplied!")
+            client_socket.shutdown(socket.SHUT_RDWR)
+            exit()
+
+        try:
+            keypoints_decompossed = pickle.loads(f)
+        except EOFError:
+            print("File format not supported!")
+            exit()
+
         keypoints_unpickled = pickle.loads(keypoints_decompossed)
 
         keypoints_1 = [
@@ -28,7 +39,13 @@ def image_processing(client_socket):
         data_size = int.from_bytes(size, 'big')
         descriptors = client_socket.recv(data_size)
         print("received")
-        f = bz2.decompress(descriptors)
+        try:
+            f = bz2.decompress(descriptors)
+        except ValueError:
+            print("Data is not properly supplied!")
+            client_socket.shutdown(socket.SHUT_RDWR)
+            exit()
+
         decomposed = pickle.loads(f)
         descriptors_1 = pickle.loads(decomposed)
 
@@ -76,6 +93,7 @@ def image_processing(client_socket):
         if filename is None:
             client_socket.send(b'Access Denied')
 
+
 if __name__=='__main__':
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(('localhost', 12345))
@@ -84,7 +102,11 @@ if __name__=='__main__':
         server.listen()
         print("Now Listening")
         client_socket, client_address = server.accept()
-        process = multiprocessing.Process(target=image_processing, args=(client_socket, ))
+        process = multiprocessing.Process(target=image_processing, args=(client_socket, server))
         process.start()
+
+        active = multiprocessing.active_children()
+        print(active)
+
 
     server.close()
