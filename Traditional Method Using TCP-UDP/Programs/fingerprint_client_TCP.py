@@ -1,8 +1,8 @@
-import os
 import socket
 import cv2
 import pickle
 import bz2
+import sys
 
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -30,35 +30,28 @@ keypoints_data = pickle.dumps(keypoints_as_tuples)
 descriptor_data = pickle.dumps(descriptor)
 
 #Compression using Bz2
-with bz2.BZ2File('compressed_keypoints.pkl.bz2', 'wb', compresslevel=9) as f:
-    pickle.dump(keypoints_data, f)
-with bz2.BZ2File('compressed_descriptor.pkl.bz2', 'wb', compresslevel=9) as f:
-    pickle.dump(descriptor_data, f)
+compressed_keypoints = bz2.compress(keypoints_data)
+compressed_descriptors = bz2.compress(descriptor_data)
 
 #Sending keypoints data
-size = os.path.getsize(r'E:\ISRO\VSSC\Fingerprint_analysis\fingerprint using client server\compressed_keypoints.pkl.bz2')
+size = sys.getsizeof(compressed_keypoints)
 client.send(size.to_bytes(4, 'big'))
-file = open(r'E:\ISRO\VSSC\Fingerprint_analysis\fingerprint using client server\compressed_keypoints.pkl.bz2', 'rb')
-keypoints_data = file.read(size)
-client.send(keypoints_data)
-file.close()
+client.send(compressed_keypoints)
+
 
 #Sending descriptor data
-size = os.path.getsize(r'E:\ISRO\VSSC\Fingerprint_analysis\fingerprint using client server\compressed_descriptor.pkl.bz2')
-print(size)
-client.send(size.to_bytes(4, 'big'))
-file = open(r'E:\ISRO\VSSC\Fingerprint_analysis\fingerprint using client server\compressed_descriptor.pkl.bz2', 'rb')
-descriptor_data = file.read(size)
+size = sys.getsizeof(compressed_descriptors)
+client.send(size.to_bytes(8, 'big'))
+
 try:
-    client.send(descriptor_data)
-    file.close()
-except ConnectionResetError:
+    client.send(compressed_descriptors)
+except Exception:
     print("Connection Closed by Server!!")
     exit()
 
 try:
     data = client.recv(1024)
-except ConnectionAbortedError:
+except Exception:
     print("Connection Closed by Server!!")
     exit()
 print("massege received")
