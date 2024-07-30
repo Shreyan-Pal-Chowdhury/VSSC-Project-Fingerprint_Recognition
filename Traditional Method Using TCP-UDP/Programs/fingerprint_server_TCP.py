@@ -12,18 +12,17 @@ def image_processing(client_socket, server):
 
         try:
             f = bz2.decompress(keypoints)
-        except (ValueError, OSError):
+        except Exception:
             print("Data is not properly supplied!")
             client_socket.shutdown(socket.SHUT_RDWR)
             exit()
 
         try:
-            keypoints_decompossed = pickle.loads(f)
-        except EOFError:
+            keypoints_unpickled = pickle.loads(f)
+        except Exception:
             print("File format not supported!")
             exit()
 
-        keypoints_unpickled = pickle.loads(keypoints_decompossed)
 
         keypoints_1 = [
             cv2.KeyPoint(
@@ -39,15 +38,15 @@ def image_processing(client_socket, server):
         data_size = int.from_bytes(size, 'big')
         descriptors = client_socket.recv(data_size)
         print("received")
+
         try:
             f = bz2.decompress(descriptors)
-        except ValueError:
+        except Exception:
             print("Data is not properly supplied!")
             client_socket.shutdown(socket.SHUT_RDWR)
             exit()
 
-        decomposed = pickle.loads(f)
-        descriptors_1 = pickle.loads(decomposed)
+        descriptors_1 = pickle.loads(f)
 
         fingerprint_folder = r'E:\ISRO\VSSC\Fingerprint_analysis\Real_new'
 
